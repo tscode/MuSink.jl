@@ -17,7 +17,7 @@ ms = jl.MuSink
 ```
 to access all functionality of the package via `ms.[function name]`.
 
-## Usage
+## Example
 One important difference between `julia` and `python` is that the former advocates the usage of the symbol `!` as a postfix to function names that alter its arguments.
 Since this results in invalid identifiers in python, the postfix `_b` is by used in `juliacall` ('b' for 'bang').
 For example, the function `MuSink.step!`, which implements the basic Sinkhorn step, has to be called via `ms.step_b` in python.
