@@ -60,7 +60,7 @@ ms.marginal(workspace, 1)
 ms.transport(workspace, 1, 3, (1, 1))
 ```
 
-A more in-depth usage tutorial that guides you through the main functionality of MuSink is provided [here](Usage).
+A more in-depth usage tutorial that guides you through the main functionality of MuSink is provided under [Usage](@ref).
 
 ## GPU support
 If you want to enable GPU support, you have to install and import the suitable package.
