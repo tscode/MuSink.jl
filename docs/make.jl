@@ -9,6 +9,7 @@ makedocs(
     "Overview" => "index.md",
     "Usage" => "usage.md",
     "API Reference" => "reference.md",
+    "Python support" => "python.md",
   ]
 )
 
