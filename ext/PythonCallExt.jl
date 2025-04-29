@@ -1,6 +1,8 @@
 
 module PythonCallExt
 
+using MuSink
+using MuSink: Node
 using PythonCall
 
 # Adapt array types that come from python in a dict, such that they have lost
