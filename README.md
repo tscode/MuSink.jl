@@ -4,7 +4,7 @@
 [![Docs](https://img.shields.io/badge/docs-dev-blue.svg)](https://tscode.github.io/MuSink.jl/dev/)
 [![Build Status](https://github.com/tscode/MuSink.jl/actions/workflows/CI.yml/badge.svg?branch=main)](https://github.com/tscode/StructPack.jl/actions/workflows/CI.yml?query=branch%3Amain)
 
-This package efficiently implements unbalanced multi-marginal optimal transport (UMOT) between measures on uniform two dimensional grids (i.e., images).
+This package efficiently implements unbalanced multi-marginal optimal transport (UMOT) between measures on uniform two dimensional grids (i.e., images) via Sinkhorn iterations.
 
 It is written in [julia](https://julialang.org) but can also be accessed from both [R](https://www.r-project.org) and [python](https://www.python.org) (see the [documentation](https://tscode.github.io/MuSink.jl/dev/)).
 
