@@ -21,7 +21,7 @@ Structure that enables remote MuSink computations.
 
 Remote workspaces can be constructed like regular ones (see [`Workspace`](@ref))
 and can then be initalized in a separate task / thread / worker via
-[`MuSink.init`](@ref).
+[`Remote.init`](@ref).
 """
 struct RemoteWorkspace{C}
   upload :: C     # Channel to upload workspaces
@@ -123,6 +123,14 @@ function signal()
   init_channel(RChannel, Bool, 1)
 end
 
+"""
+    init(ws::RemoteWorkspace, signal = nothing)
+
+Initialize the remote workspace `ws`.
+
+A channel `signal` can be passed, which receives the value `true` if
+initialization is successful.
+"""
 function init(rw :: RemoteWorkspace{C}, signal = nothing) where {C}
 
   w = Channel{Workspace}(1)

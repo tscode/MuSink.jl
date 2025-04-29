@@ -281,7 +281,7 @@ function reference(p::Problem, node :: Node)
   p.references[node]
 end
 
-function reference(p::Problem, index :: Node)
+function reference(p::Problem, index :: Int)
   @assert Tree.has_descendant(p.root, index)
   node = Tree.descendant(p.root, index)
   reference(p, node)
