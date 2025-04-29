@@ -88,11 +88,11 @@ end
   @test MuSink.get_weight(w, 1, 2) === 1.0
 
   obj = MuSink.objective(w)
-  for i in 1:100
+  for i in 1:200
     MuSink.step!(w, 1)
-     obj2 = MuSink.objective(w)
-     @test obj <= obj2 || isapprox(obj, obj2, rtol=1e-6)
-     obj = obj2
+    obj2 = MuSink.objective(w)
+    @test obj <= obj2 || isapprox(obj, obj2, rtol=1e-6)
+    obj = obj2
   end
   for i in 1:10
     @test maximum(abs, MuSink.marginal(w, i) .- MuSink.target(w, i)) <= 1e-6
