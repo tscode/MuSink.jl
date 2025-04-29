@@ -2,11 +2,16 @@
 # ------ Reductions over couplings ------------------------------------------- #
 
 """
-Reduction over a coupling. This type performantly implements sums of the form
-`sum_{b} pi_{ab} * f(a-b)`, where `pi` is a coupling.
+Reduction over a coupling.
 
-Note that the function `f` must return strictly positive values, since
-evaluation of `f` takes place in the logdomain.
+This type performantly implements sums of the form
+
+    sum_{b} pi_{ab} * f(a-b)
+
+where `pi` is a coupling.
+
+Since evaluation of `f` takes place in the logdomain, it must return strictly
+positive values.
 
 !!! note
 
@@ -152,13 +157,13 @@ end
 
 
 """
-    reduce(reduction, plan; conditional)
-    reduce(reduction, workspace, a, b; conditional)
+    reduce(r::Reduction, plan; conditional)
+    reduce(r::Reduction, workspace, a, b; conditional)
 
-    reduction(plan; conditional)
-    reduction(workspace, a, b; conditional)
+    reduction(plan::Coupling; conditional)
+    reduction(ws::Workspace, a, b; conditional)
 
-Apply the reduction `reduction` to a coupling `plan` or a `workspace` between
+Apply the reduction `r` to a coupling `plan` or a `ws` between
 nodes `a` and `b`. If `conditional = true`, the result is pointwisely divided
 by the marginal measure of node `a`.
 """

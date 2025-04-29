@@ -17,6 +17,11 @@ end
 is_leaf(node :: Node) = isempty(node.children)
 is_root(node :: Node) =  isnothing(node.parent)
 
+"""
+    root(a::Node)
+
+Returns the root node of the tree that contains `a`.
+"""
 function root(node :: Node)
   while !is_root(node)
     node = node.parent
@@ -24,7 +29,18 @@ function root(node :: Node)
   node
 end
 
+"""
+    children(a::Node)
+
+Returns all children nodes of `a`.
+"""
 children(node :: Node) = node.children
+
+"""
+    parent(a::Node)
+
+Returns the parent node of `a`. Returns `nothing` is `a` is the root node.
+"""
 parent(node :: Node) = node.parent
 index(node :: Node) = node.index
 
@@ -36,6 +52,12 @@ function neighbors(node)
   end
 end
 
+"""
+    descendants(a::Node, include_node = true)
+
+Returns all descendants of `a`, including `a` if `include_node = true` is
+passed.
+"""
 function descendants(node :: Node, include_node = true)
   nodes = include_node ? Node[node] : Node[]
   cursors = Int[1]

@@ -6,7 +6,7 @@ two nodes.
 Since the full transport plan is often impractically large, this
 type provides a lazy interface that operates on the dual potentials.
 
-Many of the operations on `Coupling`s can only be implemented performantly when
+Some of the operations on `Coupling`s can only be implemented performantly when
 nodes are adjacent. These operations fail for couplings between non-neighboring
 nodes.
 """
@@ -35,10 +35,10 @@ struct Coupling{T, F}
 end
 
 """
-    Coupling(workspace, a, b)
+    Coupling(ws::Workspace, a, b)
 
 Create a coupling object between nodes `a` and `b` that is based on the
-current potentials stored in `workspace`.
+current potentials stored in `ws`.
 """
 function Coupling(w :: Workspace{T, F}, a :: Node, b :: Node) where {T, F}
 
@@ -167,24 +167,26 @@ end
 # ------ Transport plans ----------------------------------------------------- #
 
 """
-    transport(plan_ab, i, j; conditional = false)
-    transport(plan_ab, (i, j); conditional = false)
+    transport(plan::Coupling, i, j; conditional = false)
+    transport(plan::Coupling, (i, j); conditional = false)
 
-    transport(plan_ab, is, js; conditional = false)
-    transport(plan_ab, (is, js); conditional = false)
+    transport(plan::Coupling, is, js; conditional = false)
+    transport(plan::Coupling, (is, js); conditional = false)
 
-    transport(workspace, a, b, i, j; conditional = false)
-    transport(workspace, a, b, (i, j); conditional = false)
+    transport(ws::Workspace, a, b, i, j; conditional = false)
+    transport(ws::Workspace, a, b, (i, j); conditional = false)
 
-    transport(workspace, a, b, is, js; conditional = false)
-    transport(workspace, a, b, (is, js); conditional = false)
+    transport(ws::Workspace, a, b, is, js; conditional = false)
+    transport(ws::Workspace, a, b, (is, js); conditional = false)
 
-Returns the evaluation of the coupling `plan_ab` at pixel `(i,j)` of node
+Returns the evaluation of the coupling `plan` at pixel `(i,j)` of node
 `a`. If iterables `is` and `js` are provided, a vector of transport arrays
 is returned.
-If `conditional = true`, the transport arrays sum to one. If `workspace` as
-well as two nodes `a` and `b` are provided, the corresponding coupling is
-calculated implicitly.
+
+If `conditional = true`, the transport arrays sum to one.
+
+If a workspace `ws` as well as two nodes `a` and `b` are provided, the
+corresponding coupling is calculated implicitly.
 """
 function transport(plan :: Coupling{T, F}, is, js; conditional = false) where {T, F}
   @assert length(is) == length(js)
@@ -267,21 +269,23 @@ end
 
 
 """
-    transport_window(coupling_ab, i, j; conditional = false)
-    transport_window(coupling_ab, (i, j); conditional = false)
+    transport_window(plan::Coupling, i, j; conditional = false)
+    transport_window(plan::Coupling, (i, j); conditional = false)
 
-    transport_window(workspace, a, b, i, j; conditional = false)
-    transport_window(workspace, a, b, (i, j); conditional = false)
+    transport_window(ws::Workspace, a, b, i, j; conditional = false)
+    transport_window(ws::Workspace, a, b, (i, j); conditional = false)
 
-Like `transport(coupling_ab, i, j; conditional)`, but it returns a window of
-radius `reach` around the pixel posiiton `(i, j)`.
+Like [`transport`](@ref) but returns a window of radius `reach` around the
+pixel posiiton `(i, j)`.
 
 !!! note
 
      This function is only implemented for couplings between neighboring nodes.
 """
-function transport_window(plan :: Coupling{T, F}, i, j; conditional = false) where {T, F}
-  @assert Tree.has_neighbor(plan.a, plan.b) "Transport windows are only supported for neighboring nodes"
+function transport_window(plan::Coupling{T, F}, i, j; conditional = false) where {T, F}
+  @assert Tree.has_neighbor(plan.a, plan.b) """
+  Transport windows are only supported for neighboring nodes.
+  """
 
   n, m, _ = size(plan.buffer)
   r = plan.reach
@@ -340,9 +344,9 @@ function transport_window(w :: Workspace, a, b, args...; kwargs...)
 end
 
 """
-    dense(coupling)
+    dense(plan::Coupling)
 
-Return the full transport plan of `coupling` as a dense array. For large
+Return the full transport plan of `plan` as a dense array. For large
 problems, this will take an prohibitive amount of memory. It is therefore
 limited to problems with `n*m < 65536`.
 
@@ -351,7 +355,9 @@ limited to problems with `n*m < 65536`.
     This function is only implemented for couplings between neighboring nodes
 """
 function dense(plan :: Coupling{T, F}) where {T, F}
-  @assert Tree.has_neighbor(plan.a, plan.b) "Dense plans are only supported for neighboring nodes"
+  @assert Tree.has_neighbor(plan.a, plan.b) """
+  Dense plans are only supported for neighboring nodes.
+  """
   n, m, b = size(plan.potential_a)
   @assert n*m < 65536 """
   Plan dimensions ($n,$m) are too large to create a dense plan.
