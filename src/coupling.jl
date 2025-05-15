@@ -382,6 +382,6 @@ function dense(plan :: Coupling{T, F}) where {T, F}
   end
 end
 
-function dense(w::Worspace, a, b, args...; kwargs...)
+function dense(w::Workspace, a, b, args...; kwargs...)
   dense(Coupling(w, a, b, args...; kwargs...))
 end
