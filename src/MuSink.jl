@@ -106,7 +106,7 @@ export Chain, Barycenter
 
 export RemoteWorkspace
 export Reductions
-export target, marginal, mass, cost, objective
+export target, marginal, mass, cost, objective, dense
 
 export step!
 export get_eps, get_reach, get_weight, get_rho, get_domain, get_stepmode

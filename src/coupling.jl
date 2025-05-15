@@ -345,10 +345,14 @@ end
 
 """
     dense(plan::Coupling)
+    dense(ws::Workspace, a, b)
 
 Return the full transport plan of `plan` as a dense array. For large
 problems, this will take an prohibitive amount of memory. It is therefore
 limited to problems with `n*m < 65536`.
+
+If a workspace `ws` as well as two nodes `a` and `b` are provided, the
+corresponding coupling is calculated implicitly.
 
 !!! note
 
@@ -378,3 +382,6 @@ function dense(plan :: Coupling{T, F}) where {T, F}
   end
 end
 
+function dense(w::Worspace, a, b, args...; kwargs...)
+  dense(Coupling(w, a, b, args...; kwargs...))
+end
