@@ -1,6 +1,6 @@
 # MuSink
 
-[![Docs](https://img.shields.io/badge/docs-stable-blue.svg)](https://tscode.github.io/MuSink.jl/stable/)
+<!-- [![Docs](https://img.shields.io/badge/docs-stable-blue.svg)](https://tscode.github.io/MuSink.jl/stable/) -->
 [![Docs](https://img.shields.io/badge/docs-dev-blue.svg)](https://tscode.github.io/MuSink.jl/dev/)
 [![Build Status](https://github.com/tscode/MuSink.jl/actions/workflows/CI.yml/badge.svg?branch=main)](https://github.com/tscode/StructPack.jl/actions/workflows/CI.yml?query=branch%3Amain)
 

@@ -6,7 +6,7 @@ First, run `pip install juliacall`.
 Afterwards, start a python shell and type
 ```python
 from juliacall import Main as jl
-jl.seval("using Pkg; Pkg.add(url = \"https://github.com/tscode/MuSink.jl.git\")")
+jl.seval("using Pkg; Pkg.add(\"MuSink\")")
 ```
 This should take care of all necessary installations.
 From now on, you can run
