@@ -1,7 +1,7 @@
 name = "MuSink"
 uuid = "9311f4a3-d431-4665-b35d-8d2edcf6b88a"
 authors = ["Thomas Staudt <tscode@posteo.net>"]
-version = "0.1.0"
+version = "0.1.1"
 
 [deps]
 Distributed = "8ba89e20-285c-5b6f-9357-94700520ee1b"
