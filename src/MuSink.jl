@@ -111,6 +111,7 @@ export target, marginal, mass, cost, objective, dense
 export step!
 export get_eps, get_reach, get_weight, get_rho, get_domain, get_stepmode
 export set_eps!, set_reach!, set_weight!, set_rho!, set_domain!, set_stepmode!
+export converge!
 
 export transport, transport_window
 
