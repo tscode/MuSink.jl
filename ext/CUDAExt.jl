@@ -216,8 +216,6 @@ function Ops.expdomain_sparse( T :: Type{CuArray{F}}
 end
 
 
-
-
 # ----- CUDA kernel implementations ------------------------------------------ #
 
 """

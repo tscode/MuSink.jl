@@ -1,5 +1,4 @@
 
-
 module MuSink
 
 using Random, LinearAlgebra, Statistics, SparseArrays
@@ -95,7 +94,28 @@ module Remote
 
 end
 
+"""
+Module that implements entropic optimal transport between two arbitrary discrete
+measures of the same weight.
+
+This is an auxiliary extension to MuSink and is primarily used for testing
+purposes.
+"""
+module Empirical
+
+  using LinearAlgebra, Statistics
+
+  import ..MuSink
+  import ..MuSink: dense, converge!, absfinite, get_eps
+  import ..MuSink: step!, set_eps!, set_domain!, set_stepmode!
+
+
+  include("empirical.jl")
+
+end
+
 const RemoteWorkspace = Remote.RemoteWorkspace
+const EmpiricalWorkspace = Empirical.EmpiricalWorkspace
 
 
 ## Dynamic extensions of core MuSink
@@ -105,6 +125,8 @@ export Lp, LpNotSep, KullbackLeibler, TotalVariation
 export Chain, Barycenter
 
 export RemoteWorkspace
+export EmpiricalWorkspace
+
 export Reductions
 export target, marginal, mass, cost, objective, dense
 

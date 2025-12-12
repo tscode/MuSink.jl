@@ -43,6 +43,7 @@ function converge!( w :: Workspace
     MuSink.set_eps!(w, start_eps)
   else
     log("No start_eps provided, using workspace value eps = $(get_eps(w))")
+    start_eps = get_eps(w)
   end
 
   # Set target value for epsilon to the current value if no target is specified
@@ -137,7 +138,7 @@ function converge!( w :: Workspace
     # The target resolution is not yet reached. Decrease epsilon and continue
     else
       blur = MuSink.blur(w)
-      eps = MuSink.get_eps(w) * scaling
+      eps = max(target_eps, MuSink.get_eps(w) * scaling)
       MuSink.set_eps!(w, eps)
       log("Reducing workspace eps to $eps (blur $blur)")
       

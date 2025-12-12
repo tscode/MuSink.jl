@@ -79,7 +79,7 @@ end
 
 function Base.show(io :: IO, p :: Problem)
   nmarg = length(p.targets)
-  print(io, "MUSink.Problem($nmarg, $(p.dims))")
+  print(io, "Problem($nmarg, $(p.dims))")
 end
 
 Base.show(io :: IO, ::MIME"text/plain", p :: Problem) = Base.show(io, p)

@@ -623,7 +623,7 @@ function step!(w :: Workspace{T}; stepmode = w.stepmode) where {T}
   1
 end
 
-function step!(w :: Workspace, number :: Real; max_time = Inf, kwargs...)
+function step!(w, number :: Real; max_time = Inf, kwargs...)
   count = 0
   start_time = time_ns()
   dt = 0
