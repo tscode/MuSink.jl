@@ -8,6 +8,7 @@ makedocs(
   pages = [
     "Overview" => "index.md",
     "Usage" => "usage.md",
+    "Empirical EOT" => "empirical.md",
     "API Reference" => "reference.md",
     "Python support" => "python.md",
   ]

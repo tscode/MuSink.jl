@@ -81,11 +81,14 @@ set_stepmode!
 set_domain!
 ```
 
+## Empirical Workspaces
+```@docs
+Empirical.EmpiricalWorkspace
+```
+
 ## Remote Workspaces
 ```@docs
 Remote.RemoteWorkspace
 Remote.init
 ```
-
-
 

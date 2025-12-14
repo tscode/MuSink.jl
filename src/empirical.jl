@@ -1,4 +1,5 @@
 
+
 """
 MuSink empirical problem type that defines the fixed parts of a classical
 entropically regularized optimal transport problem.
@@ -6,11 +7,9 @@ entropically regularized optimal transport problem.
 Contains two weight vectors and a cost specifier.
 """
 struct EmpiricalProblem
-  a :: Vector{Float64}
-  b :: Vector{Float64}
-  c :: Matrix{Float64}
-  # x :: Vector   # TODO
-  # y :: Vector
+  a :: AbstractVector{<: AbstractFloat}
+  b :: AbstractVector{<: AbstractFloat}
+  c :: AbstractMatrix{<: AbstractFloat}
   
   function EmpiricalProblem(a, b, c)
     @assert isapprox(sum(a), sum(b)) """
@@ -28,7 +27,9 @@ function Base.show(io :: IO, p :: EmpiricalProblem)
   print(io, "EmpiricalProblem($(length(p.a))×$(length(p.b)))")
 end
 
-Base.show(io :: IO, ::MIME"text/plain", p :: EmpiricalProblem) = Base.show(io, p)
+function Base.show(io :: IO, ::MIME"text/plain", p :: EmpiricalProblem)
+  Base.show(io, p)
+end
 
 """
     EmpiricalProblem(a, b, c)
@@ -50,6 +51,17 @@ function EmpiricalProblem(c :: AbstractMatrix{<: AbstractFloat})
   EmpiricalProblem(a, b, c)
 end
 
+function check_stepmode(stepmode)
+  stepmode = stepmode |> string |> lowercase
+  options = ["default", "symmetric"]
+  if stepmode in options
+    Symbol(stepmode)
+  else
+    @warn "stepmode :$stepmode is invalid. Falling back to :stable" 
+    :default
+  end
+end
+
 """
 MuSink empirical workspace type that implements efficient Sinkhorn iterations
 to solve entropically regularized transport between two weight vectors with same
@@ -67,19 +79,24 @@ mutable struct EmpiricalWorkspace{T <: AbstractArray, F}
   c :: T
 
   stepmode :: Symbol
-  logdomain :: Bool
 
   eps :: F
   eps_inv :: F
 
-  potential_a :: T
-  potential_b :: T
+  # Dual solutions, i.e., potentials in the logdomain
+  da :: T
+  db :: T
 
-  potential_a_prev :: T
-  potential_b_prev :: T
+  # Dual variables in the exp-domain (scaling variables),
+  # which may be absorbed into the kernel periodically
+  u :: T
+  v :: T
 
-  potential_a_buf :: T
-  potential_b_buf :: T
+  u_prev :: T
+  v_prev :: T
+
+  u_buf :: T
+  v_buf :: T
 
   kernel :: T
 
@@ -88,63 +105,62 @@ mutable struct EmpiricalWorkspace{T <: AbstractArray, F}
   steps :: Int
 end
 
+function EmpiricalWorkspace(args...; kwargs...)
+  EmpiricalWorkspace(EmpiricalProblem(args...); kwargs...)
+end
+
+
 function EmpiricalWorkspace( p :: EmpiricalProblem
                            ; eps = 1
                            , stepmode = :default
-                           , logdomain = false
                            , atype = :array64 )
 
-  @assert logdomain == false
-  @assert stepmode in [:default, :symmetric] """
-  Only stepmodes :default and :symmetric are supported.
-  """
+  stepmode = check_stepmode(stepmode)
 
   T = MuSink.atype(atype)
   F = eltype(T)
   eps = F(eps)
+  eps_inv = one(F) / eps
 
   a = convert(T, p.a)
   b = convert(T, p.b)
   c = convert(T, p.c)
 
-  potential_a = T(undef, length(a))
-  potential_b = T(undef, length(b))
+  da = T(undef, length(a))
+  db = T(undef, length(b))
 
-  potential_a_prev = T(undef, length(a))
-  potential_b_prev = T(undef, length(b))
+  u = T(undef, length(a))
+  v = T(undef, length(b))
 
-  potential_a_buf = T(undef, length(a))
-  potential_b_buf = T(undef, length(b))
+  u_prev = T(undef, length(a))
+  v_prev = T(undef, length(b))
 
+  u_buf = T(undef, length(a))
+  v_buf = T(undef, length(b))
 
-  if logdomain
-    # TODO: logdomain does not work
-    kernel = copy(c)
-    potential_a .= zero(F)
-    potential_b .= zero(F)
-  else
-    kernel = exp.(.- c ./ eps)
-    potential_a .= one(F)
-    potential_b .= one(F)
-  end
+  kernel = exp.(.- c .* eps_inv)
 
-  potential_a_prev .= potential_a
-  potential_b_prev .= potential_b
+  da .= zero(F)
+  db .= zero(F)
+
+  u .= one(F)
+  v .= one(F)
 
   EmpiricalWorkspace{T, eltype(T)}( p
                                   , a
                                   , b
                                   , c
                                   , stepmode
-                                  , logdomain
                                   , eps
-                                  , one(F) / eps
-                                  , potential_a
-                                  , potential_b
-                                  , potential_a_prev
-                                  , potential_b_prev
-                                  , potential_a_buf
-                                  , potential_b_buf
+                                  , eps_inv
+                                  , da
+                                  , db
+                                  , u
+                                  , v
+                                  , u_prev
+                                  , v_prev
+                                  , u_buf
+                                  , v_buf
                                   , kernel
                                   , false
                                   , 0
@@ -164,31 +180,33 @@ function Base.show(io :: IO, ::MIME"text/plain", w :: EmpiricalWorkspace{T}) whe
   dims = join(size(w.kernel), "×")
   sz = "size: $dims"
   eps = "eps: $(w.eps)"
-  log = "logdomain: $(w.logdomain)"
   mode = "stepmode: :$(w.stepmode)"
+  steps = "steps: $(w.steps)"
+  absorptions = "absorptions: $(w.absorptions)"
 
   println(io, "Workspace{$T}:")
   println(io, "  $sz")
   println(io, "  $eps")
   println(io, "  $log")
-  print(io, "  $mode")
+  println(io, "  $mode")
+  println(io, "  $steps")
+  print(io, "  $absorptions")
 end
 
 function Base.copy(w :: EmpiricalWorkspace{T}, S :: Type{<: AbstractArray} = T) where {T}
-  ws = Workspace(w.problem; w.eps, w.logdomain, w.stepmode, atype = S)
+  ws = EmpiricalWorkspace(w.problem; w.eps, w.stepmode, atype = S)
+
   ws.steps = w.steps
   ws.absorptions = w.absorptions
   ws.absorbed = w.absorbed
 
-  ws.kernel .= convert(S, w.buffer)
-  ws.potential_a .= convert(S, w.potential_a)
-  ws.potential_b .= convert(S, w.potential_b)
+  ws.u .= convert(S, w.u)
+  ws.v .= convert(S, w.v)
 
-  ws.potential_a_prev .= convert(S, w.potential_a_prev)
-  ws.potential_b_prev .= convert(S, w.potential_b_prev)
+  ws.u_prev .= convert(S, w.u_prev)
+  ws.v_prev .= convert(S, w.v_prev)
 
-  ws.potential_a_buf .= convert(S, w.potential_a_buf)
-  ws.potential_b_buf .= convert(S, w.potential_b_buf)
+  ws.kernel .= convert(S, w.kernel)
 
   ws
 end
@@ -202,15 +220,12 @@ function Base.convert(:: Type{EmpiricalWorkspace{T, F}}, w :: EmpiricalWorkspace
 end
 
 function absorbpotentials!(w :: EmpiricalWorkspace{T, F}) where {T, F}
-  if w.logdomain
-    w.kernel .= w.c .- w.potential_a .- w.potential_b'
-    w.potential_a .= zero(F)
-    w.potential_b .= zero(F)
-  else
-    w.kernel .= w.potential_a .* w.kernel .* w.potential_b'
-    w.potential_a .= one(F)
-    w.potential_b .= one(F)
-  end
+  w.da .+= w.eps * log.(w.u)
+  w.db .+= w.eps * log.(w.v)
+  
+  w.kernel .= w.u .* w.kernel .* w.v'
+  w.u .= one(F)
+  w.v .= one(F)
 
   w.absorptions += 1
   w.absorbed = true
@@ -220,24 +235,24 @@ end
 
 function step!(w :: EmpiricalWorkspace{T}; stepmode = w.stepmode) where {T}
 
-  w.potential_a_prev .= w.potential_a
-  w.potential_b_prev .= w.potential_b
+  w.u_prev .= w.u
+  w.v_prev .= w.v
   
   if stepmode == :symmetric
 
-    mul!(w.potential_a_buf, w.kernel, w.potential_b)
-    mul!(w.potential_b_buf, w.kernel', w.potential_a)
+    mul!(w.u_buf, w.kernel, w.v)
+    mul!(w.v_buf, w.kernel', w.u)
 
-    w.potential_a .= sqrt.(w.potential_a) .* sqrt.(w.a ./ w.potential_a_buf)
-    w.potential_b .= sqrt.(w.potential_b) .* sqrt.(w.b ./ w.potential_b_buf)
+    w.u .= sqrt.(w.u) .* sqrt.(w.a ./ w.u_buf)
+    w.v .= sqrt.(w.v) .* sqrt.(w.b ./ w.v_buf)
 
   else
 
-    mul!(w.potential_a, w.kernel, w.potential_b)
-    w.potential_a .= w.a ./ w.potential_a
+    mul!(w.u, w.kernel, w.v)
+    w.u .= w.a ./ w.u
 
-    mul!(w.potential_b, w.kernel', w.potential_a)
-    w.potential_b .= w.b ./ w.potential_b
+    mul!(w.v, w.kernel', w.u)
+    w.v .= w.b ./ w.v
   end
 
   w.steps += 1
@@ -247,46 +262,21 @@ function step!(w :: EmpiricalWorkspace{T}; stepmode = w.stepmode) where {T}
 end
 
 MuSink.get_eps(w :: EmpiricalWorkspace) = w.eps
-MuSink.get_domain(w :: EmpiricalWorkspace) = w.logdomain
 MuSink.get_stepmode(w :: EmpiricalWorkspace) = w.stepmode
 
 function MuSink.set_eps!(w :: EmpiricalWorkspace{T}, eps) where {T}
-  eps_old = w.eps
-  eps_inv_old = 1 / eps_old
-
   w.eps = eps
   w.eps_inv = 1 / eps
 
-  # Potentials only change if stored in expdomain
-  if !w.logdomain
-    # Go to logdomain via old eps and back to expdomain via new eps
-    w.potential_a .= eps_old .* log.(w.potential_a)
-    w.potential_a .= exp.(w.potential_a .* w.eps_inv)
-    w.potential_b .= eps_old .* log.(w.potential_b)
-    w.potential_b .= exp.(w.potential_b .* w.eps_inv)
+  # This updates da and db and brings u and v back to 1, which makes them
+  # independent of eps. Therefore, they do not have to be updated here.
+  absorbpotentials!(w)
 
-    w.kernel .= eps_old .* log.(w.kernel) 
-    w.kernel .= exp.(w.kernel .* w.eps_inv)
-  end
+  w.kernel .= exp.(.- (w.c .- w.da .- w.db') .* w.eps_inv)
 
   w.absorbed = false
 
   nothing
-end
-
-function MuSink.set_domain!(w :: EmpiricalWorkspace, logdomain)
-  error("Not implemented")
-end
-
-function check_stepmode(stepmode)
-  stepmode = stepmode |> string |> lowercase
-  options = ["default", "symmetric"]
-  if stepmode in options
-    Symbol(stepmode)
-  else
-    @warn "stepmode :$stepmode is invalid. Falling back to :stable" 
-    :default
-  end
 end
 
 function MuSink.set_stepmode!(w :: EmpiricalWorkspace, stepmode)
@@ -314,25 +304,32 @@ function MuSink.dense(w :: EmpiricalWorkspace{T}) where {T}
 end
 
 function step_impact_potential(w :: EmpiricalWorkspace)
-  if w.logdomain
-    max(
-      maximum(absfinite, w.potential_a .- w.potential_a_prev),
-      maximum(absfinite, w.potential_b .- w.potential_b_prev),
-    )
-  else
-    w.potential_a_buf .= (log.(w.potential_a) .- log.(w.potential_a_prev))
-    w.potential_b_buf .= (log.(w.potential_b) .- log.(w.potential_b_prev))
-    w.eps * max(
-      maximum(absfinite, w.potential_a_buf),
-      maximum(absfinite, w.potential_b_buf),
-    )
-  end
+  w.u_buf .= (log.(w.u) .- log.(w.u_prev))
+  w.v_buf .= (log.(w.v) .- log.(w.v_prev))
+  w.eps * max(
+    maximum(absfinite, w.u_buf),
+    maximum(absfinite, w.v_buf),
+  )
 end
 
 function step_impact_plan(w :: EmpiricalWorkspace)
   exp(2 * step_impact_potential(w) * w.eps_inv) - 1
 end
 
+function check_consistency(w :: EmpiricalWorkspace)
+  # Update da and db
+  if !w.absorbed
+    absorbpotentials!(w)
+  end
+  plan = exp.(.- (w.c .- w.da .- w.db') .* w.eps_inv)
+  error = maximum(abs, plan .- MuSink.dense(w))
+  if error > 1e-8
+    @warn "Accumulated transport plan error of up to $error detected"
+    false
+  else
+    true
+  end
+end
 
 function MuSink.converge!( w :: EmpiricalWorkspace
                          ; start_eps = nothing
@@ -391,15 +388,13 @@ function MuSink.converge!( w :: EmpiricalWorkspace
       MuSink.step!(w, 1)
       error = abs(step_impact_plan(w))
 
-      if !w.logdomain
-        magnitude = max(
-          maximum(w.potential_a),
-          maximum(abs, w.potential_b),
-        )
-        if magnitude > absorption_threshold
-          log("Absorption of potentials into kernel during step $(w.steps)")
-          absorbpotentials!(w)
-        end
+      magnitude = max(
+        maximum(w.u),
+        maximum(abs, w.v),
+      )
+      if magnitude > absorption_threshold
+        log("Absorption of potentials into kernel during step $(w.steps)")
+        absorbpotentials!(w)
       end
 
       count += 1

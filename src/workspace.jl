@@ -339,6 +339,7 @@ function Base.show(io :: IO, ::MIME"text/plain", w :: Workspace{T}) where {T}
   reach = "reach: $(w.reach)"
   log = "logdomain: $(w.logdomain)"
   mode = "stepmode: :$(w.stepmode)"
+  steps = "steps: $(w.steps)"
 
   println(io, "Workspace{$T}:")
   println(io, "  $targets")
@@ -346,7 +347,8 @@ function Base.show(io :: IO, ::MIME"text/plain", w :: Workspace{T}) where {T}
   println(io, "  $rho")
   println(io, "  $reach")
   println(io, "  $log")
-  print(io, "  $mode")
+  println(io, "  $mode")
+  print(io, "  $steps")
 end
 
 function Base.copy(w :: Workspace{T}, S :: Type{<: AbstractArray} = T) where {T}
