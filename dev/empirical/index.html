@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Empirical EOT · MuSink.jl Documentation</title><meta name="title" content="Empirical EOT · MuSink.jl Documentation"/><meta property="og:title" content="Empirical EOT · MuSink.jl Documentation"/><meta property="twitter:title" content="Empirical EOT · MuSink.jl Documentation"/><meta name="description" content="Documentation for MuSink.jl Documentation."/><meta property="og:description" content="Documentation for MuSink.jl Documentation."/><meta property="twitter:description" content="Documentation for MuSink.jl Documentation."/><script data-outdated-warner src="../assets/warner.js"></script><link href="https://cdnjs.cloudflare.com/ajax/libs/lato-font/3.0.0/css/lato-font.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/juliamono/0.050/juliamono.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.8/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL=".."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="../assets/documenter.js"></script><script src="../search_index.js"></script><script src="../siteinfo.js"></script><script src="../../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/catppuccin-mocha.css" data-theme-name="catppuccin-mocha"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/catppuccin-macchiato.css" data-theme-name="catppuccin-macchiato"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/catppuccin-frappe.css" data-theme-name="catppuccin-frappe"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/catppuccin-latte.css" data-theme-name="catppuccin-latte"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/documenter-dark.css" data-theme-name="documenter-dark" data-theme-primary-dark/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="../assets/themeswap.js"></script></head><body><div id="documenter"><nav class="docs-sidebar"><div class="docs-package-name"><span class="docs-autofit"><a href="../">MuSink.jl Documentation</a></span></div><button class="docs-search-query input is-rounded is-small is-clickable my-2 mx-auto py-1 px-2" id="documenter-search-query">Search docs (Ctrl + /)</button><ul class="docs-menu"><li><a class="tocitem" href="../">Overview</a></li><li><a class="tocitem" href="../usage/">Usage</a></li><li class="is-active"><a class="tocitem" href>Empirical EOT</a></li><li><a class="tocitem" href="../reference/">API Reference</a></li><li><a class="tocitem" href="../python/">Python support</a></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><a class="docs-sidebar-button docs-navbar-link fa-solid fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a><nav class="breadcrumb"><ul class="is-hidden-mobile"><li class="is-active"><a href>Empirical EOT</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>Empirical EOT</a></li></ul></nav><div class="docs-right"><a class="docs-navbar-link" href="https://github.com/tscode/MuSink.jl" title="View the repository on GitHub"><span class="docs-icon fa-brands"></span><span class="docs-label is-hidden-touch">GitHub</span></a><a class="docs-navbar-link" href="https://github.com/tscode/MuSink.jl/blob/main/docs/src/empirical.md" title="Edit source on GitHub"><span class="docs-icon fa-solid"></span></a><a class="docs-settings-button docs-navbar-link fa-solid fa-gear" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-article-toggle-button fa-solid fa-chevron-up" id="documenter-article-toggle-button" href="javascript:;" title="Collapse all docstrings"></a></div></header><article class="content" id="documenter-page"><h1 id="Empirical-Entropic-Optimal-Transport"><a class="docs-heading-anchor" href="#Empirical-Entropic-Optimal-Transport">Empirical Entropic Optimal Transport</a><a id="Empirical-Entropic-Optimal-Transport-1"></a><a class="docs-heading-anchor-permalink" href="#Empirical-Entropic-Optimal-Transport" title="Permalink"></a></h1><p>For testing purposes and for convenience, MuSink also implements a robust and performant version of the classical Sinkhorn scaling for entropic optimal transport. It is restricted to the special case of <strong>balanced</strong> optimal transport between <strong>two measures</strong> only. The cost structure can be arbitrary, however.</p><p>This functionality is implemented via <code>EmpiricalWorkspace</code>.</p><pre><code class="language-julia hljs">n, m = (10, 20)
+
+a, b = rand(n), rand(m)
+a ./= sum(a)
+b ./= sum(b)
+
+# Random cost matrix
+c = rand(n, m)
+
+# Create the empirical workspace (limited to the special sub-problem of
+# two balanced measures and full transport)
+w = EmpiricalWorkspace(a, b, c, eps = 1)
+converge!(w, target_eps = 0.01)
+
+marginal(w, 1) # should be similar to a
+marginal(w, 2) # should be similar to b
+
+dense(w) # Get the full plan</code></pre><p>Often, the cost matrix will be derived from two point clouds to be matched. Below is an example where we calculate entropic optimal transport between two images where only a few pixels are active.</p><p>We now have two options to do so. First, we can operate on the full dense images. Alternatively, we construct a suitable cost matrix out of the locations of active pixels and employ the <code>EmpiricalWorkspace</code>.</p><pre><code class="language-julia hljs">pixels_1 = [
+  (1, 5),
+  (10, 100),
+  (55, 3)
+]
+
+pixels_2 = [
+  (72, 42),
+  (37, 66),
+]
+
+img_1 = zeros(100, 100)
+img_2 = zeros(100, 100)
+
+for (i, j) in pixels_1
+  img_1[i, j] = 1
+end
+
+for (i, j) in pixels_2
+  img_2[i, j] = 1
+end
+
+img_1 .= img_1 ./ sum(img_1)
+img_2 .= img_2 ./ sum(img_2)
+
+
+##
+## Option 1: Solve the problem between the 2d-images
+##
+
+# This is convenience syntax for a workspace with a simple linear graph
+cost = Lp(100, 100; p = 2, max = 1)
+w1 = Chain([img_1, img_2], cost = cost, eps = 0.1)
+
+converge!(w1, target_eps = 0.001, scaling = 0.5)
+
+# Coloc mass a cost threshold 0.1
+@show sum(Reductions.coloc(w1, 1, 2, threshold = 0.1))
+
+
+##
+## Option 2: Solve the problem by classical EOT with a given cost matrix
+##
+
+scale = 99^2 + 99^2 # scale maximal cost to 1
+
+c = broadcast(pixels_1, reshape(pixels_2, 1, :)) do (i1, j1), (i2, j2)
+  ((i1 - i2)^2 + (j1 - j2)^2) / scale 
+end
+
+w2 = EmpiricalWorkspace(c, eps = 0.1)
+
+converge!(w2, target_eps = 0.001, scaling = 0.5)
+
+# Coloc mass a cost threshold 0.1. Here, we can compute the full plan
+plan = dense(w2)
+
+# Coloc mass a cost threshold 0.1
+@show sum(plan[c .&lt;= 0.1])</code></pre><p>As in the case of a usual <a href="../reference/#MuSink.Workspace"><code>Workspace</code></a>, you can let <code>w2</code> operate on a special array type to accelerate the sinkhorn steps. For example, to exploit a CUDA capable GPU, load the CUDA package and specify <code>atype = :cuda64</code>.</p><p>If the construction of the cost matrix <code>c</code> is a bottleneck in your application, it can be constructed on the GPU as well.</p><pre><code class="language-julia hljs">pixels_1 = convert(CuArray{Float64}, pixels_1)
+pixels_2 = convert(CuArray{Float64}, pixels_2)
+
+c = broadcast(pixels_1, reshape(pixels_2, 1, :)) do (i1, j1), (i2, j2)
+  ((i1 - i2)^2 + (j1 - j2)^2) / scale
+end
+
+w2 = EmpiricalWorkspace(c, eps = 0.1, atype = :cuda64)</code></pre></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../usage/">« Usage</a><a class="docs-footer-nextpage" href="../reference/">API Reference »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.16.1 on <span class="colophon-date" title="Sunday 14 December 2025 13:13">Sunday 14 December 2025</span>. Using Julia version 1.12.2.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
