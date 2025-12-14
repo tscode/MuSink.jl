@@ -105,6 +105,13 @@ mutable struct EmpiricalWorkspace{T <: AbstractArray, F}
   steps :: Int
 end
 
+"""
+    EmpiricalWorkspace([a, b,] c; eps = 1, stepmode = :default, [atype])
+
+Create an empirical Workspace that performs Sinkhorn iterations to match the measures `a` and `b` (uniform by default) under the cost matrix `c`.
+
+The stepmode can be `:default` or `:symmetric`.
+"""
 function EmpiricalWorkspace(args...; kwargs...)
   EmpiricalWorkspace(EmpiricalProblem(args...); kwargs...)
 end

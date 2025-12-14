@@ -2,7 +2,7 @@
 
 For testing purposes and for convenience, MuSink also implements a robust and performant version of the classical Sinkhorn scaling for entropic optimal transport. It is restricted to the special case of **balanced** optimal transport between **two measures** only. The cost structure can be arbitrary, however.
 
-This functionality is implemented via [`EmpiricalWorkspace`](@ref).
+This functionality is implemented via `EmpiricalWorkspace`.
 ```julia
 n, m = (10, 20)
 
@@ -26,7 +26,7 @@ dense(w) # Get the full plan
 
 Often, the cost matrix will be derived from two point clouds to be matched. Below is an example where we calculate entropic optimal transport between two images where only a few pixels are active.
 
-We now have two options to do so. First, we can operate on the full dense images. Alternatively, we construct a suitable cost matrix out of the locations of active pixels and employ the [`EmpiricalWorkspace`](@ref).
+We now have two options to do so. First, we can operate on the full dense images. Alternatively, we construct a suitable cost matrix out of the locations of active pixels and employ the `EmpiricalWorkspace`.
 
 ```julia
 pixels_1 = [

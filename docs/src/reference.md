@@ -84,6 +84,7 @@ set_domain!
 ## Empirical Workspaces
 ```@docs
 Empirical.EmpiricalWorkspace
+Empirical.EmpiricalWorkspace(args...; kwargs...)
 ```
 
 ## Remote Workspaces
